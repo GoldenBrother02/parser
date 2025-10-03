@@ -10,7 +10,7 @@ public class Expression : ASTnode
 
     public Expression(ASTnode left, ASTnode op, ASTnode right)
     {
-        if (op.GetType() != typeof(BinaryOperator)) { throw new Exception("Operator needs to be an operator"); }
+        if (op.GetType() != typeof(BinaryOperator)) { throw new ArgumentException("Operator needs to be an operator"); }
         Left = left;
         Right = right;
         Operator = op;

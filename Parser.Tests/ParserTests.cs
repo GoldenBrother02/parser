@@ -59,7 +59,7 @@ public class ParserTests
 
         var nodenized = parser.Nodenize(parser.Content);
 
-        var exception = Assert.Throws<Exception>(() => new Expression(nodenized[0], nodenized[0], nodenized[0]));
+        var exception = Assert.Throws<ArgumentException>(() => new Expression(nodenized[0], nodenized[0], nodenized[0]));
         Assert.Equal("Operator needs to be an operator", exception.Message);
     }
 

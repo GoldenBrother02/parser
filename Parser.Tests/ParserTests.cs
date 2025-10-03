@@ -68,7 +68,7 @@ public class ParserTests
     {
         var ex = Assert.Throws<ArgumentException>(() => new Parser("1+2+"));
 
-        Assert.Equal("Input cannot end on an operator.", ex.Message);
+        Assert.Equal("Expression cannot end with operator or '('", ex.Message);
     }
 
     [Fact]

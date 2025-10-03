@@ -24,4 +24,31 @@ public class ParserTests
         Assert.Equivalent(nodenized[1], expr.Operator);
         Assert.Equivalent(nodenized[2], expr.Right);
     }
+
+    [Fact]
+    public void Parser_returns_Longer_Expressions_Correctly()
+    {
+        var parser = new Parser("1+2+3+4");
+
+        var expectedlist = new List<string> { "1", "+", "2", "+", "3", "+", "4" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+        Assert.IsType<BinaryOperator>(nodenized[5]);
+        Assert.IsType<Number>(nodenized[6]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        var leftExpression = new Expression(nodenized[0], nodenized[1], nodenized[2]);
+        var rightExpression = new Expression(nodenized[4], nodenized[5], nodenized[6]);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(leftExpression, expr.Left);
+        Assert.Equivalent(nodenized[3], expr.Operator);
+        Assert.Equivalent(rightExpression, expr.Right);
+    }
 }

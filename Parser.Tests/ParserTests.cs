@@ -51,4 +51,15 @@ public class ParserTests
         Assert.Equivalent(nodenized[3], expr.Operator);
         Assert.Equivalent(rightExpression, expr.Right);
     }
+
+    [Fact]
+    public void Wrongly_Built_Expression_Throws()
+    {
+        var parser = new Parser("1+2+3+4");
+
+        var nodenized = parser.Nodenize(parser.Content);
+
+        var exception = Assert.Throws<Exception>(() => new Expression(nodenized[0], nodenized[0], nodenized[0]));
+        Assert.Equal("Operator needs to be an operator", exception.Message);
+    }
 }

@@ -62,4 +62,20 @@ public class ParserTests
         var exception = Assert.Throws<Exception>(() => new Expression(nodenized[0], nodenized[0], nodenized[0]));
         Assert.Equal("Operator needs to be an operator", exception.Message);
     }
+
+    [Fact]
+    public void Ending_Invalid_Input_Causes_ArgumentException()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => new Parser("1+2+"));
+
+        Assert.Equal("Input cannot end on an operator.", ex.Message);
+    }
+
+    [Fact]
+    public void Middle_Invalid_Input_Causes_ArgumentException()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => new Parser("1++2"));
+
+        Assert.Equal("The expression you have entered is invalid.", ex.Message);
+    }
 }

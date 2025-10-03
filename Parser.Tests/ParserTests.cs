@@ -18,7 +18,7 @@ public class ParserTests
         Assert.IsType<BinaryOperator>(nodenized[1]);
         Assert.IsType<Number>(nodenized[2]);
 
-        var expr = parser.TreeTime(nodenized);
+        var expr = (Expression)parser.TreeTime(nodenized);
         Assert.IsType<Expression>(expr);
         Assert.Equivalent(nodenized[0], expr.Left);
         Assert.Equivalent(nodenized[1], expr.Operator);

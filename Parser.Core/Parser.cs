@@ -1,5 +1,6 @@
 using System.Diagnostics.Contracts;
 using System.Linq.Expressions;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Paarser;
 
@@ -15,7 +16,7 @@ public class Parser
 
         var tokens = Content.Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
 
-        // 1. Validate parentheses balance and order
+        // 1. Validate brackets balance and order
         int balance = 0;
         for (int i = 0; i < tokens.Count; i++)
         {
@@ -54,7 +55,7 @@ public class Parser
 
         if (balance != 0)
         {
-            throw new ArgumentException("Mismatched parentheses in expression.");
+            throw new ArgumentException("Mismatched brackets in expression.");
         }
 
         // 2. Validate last token is not operator or '('
@@ -63,7 +64,7 @@ public class Parser
             throw new ArgumentException("Expression cannot end with operator or '('");
         }
 
-        // 3. Validate sequence of tokens (alternating number/operator, ignoring parentheses)
+        // 3. Validate sequence of tokens (alternating number/operator, ignoring brackets)
         var check = tokens.Where(c => c != "(" && c != ")").ToList();
         bool isValid = check
             .Select((item, index) => new { item, index })
@@ -137,29 +138,73 @@ public class Parser
         return resultlist;
     }
 
+    public List<ASTnode> Power(List<ASTnode> flat)
+    {
+        List<ASTnode> Checkedlist = [];
+
+        for (int i = 0; i < flat.Count; i++)
+        {
+            if (flat[i] is BinaryOperator binary && binary.Type == "^")
+            {
+                var left = Checkedlist.Last();
+                var right = flat[i + 1];
+                Checkedlist[Checkedlist.Count - 1] = new Expression(left, flat[i], right);
+                i++;
+            }
+            else
+            {
+                Checkedlist.Add(flat[i]);
+            }
+        }
+        return Checkedlist;
+    }
+
+    public List<ASTnode> Multiplication(List<ASTnode> power)
+    {
+        List<ASTnode> Checkedlist = [];
+
+        for (int i = 0; i < power.Count; i++)
+        {
+            if (power[i] is BinaryOperator binary && (binary.Type == "*" || binary.Type == "/"))
+            {
+                var left = Checkedlist.Last();
+                var right = power[i + 1];
+                Checkedlist[Checkedlist.Count - 1] = new Expression(left, power[i], right);
+                i++;
+            }
+            else
+            {
+                Checkedlist.Add(power[i]);
+            }
+        }
+        return Checkedlist;
+    }
+
     public ASTnode TreeTime(List<ASTnode> list)
     {
         var flat = BracketTime(list);
 
-        if (flat.Count == 0)
+        var DoneList = Multiplication(Power(flat));
+
+        if (DoneList.Count == 0)
             throw new ArgumentException("Empty expression.");
-        if (flat.Count == 1)
-            return flat[0];
+        if (DoneList.Count == 1)
+            return DoneList[0];
 
         // Sanity check: must alternate operand/operator/operand
-        if (flat.Count % 2 == 0)
+        if (DoneList.Count % 2 == 0)
             throw new ArgumentException("Invalid number of tokens.");
 
-        ASTnode current = flat[0];
+        ASTnode current = DoneList[0];
 
         // Fold left-to-right
-        for (int i = 1; i < flat.Count; i += 2)
+        for (int i = 1; i < DoneList.Count; i += 2)
         {
-            if (i + 1 >= flat.Count)
+            if (i + 1 >= DoneList.Count)
                 throw new ArgumentException("Dangling operator at end of expression.");
 
-            var op = (BinaryOperator)flat[i];
-            var right = flat[i + 1];
+            var op = (BinaryOperator)DoneList[i];
+            var right = DoneList[i + 1];
             current = new Expression(current, op, right);
         }
 

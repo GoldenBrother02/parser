@@ -232,8 +232,8 @@ public class ParserTests
         Assert.IsType<Number>(nodenized[6]);
 
         var expr = (Expression)parser.TreeTime(nodenized);
-        var firstExpression = new Expression(nodenized[2], nodenized[3], nodenized[4]);
-        var secondExpression = new Expression(firstExpression, nodenized[5], nodenized[6]);
+        var firstExpression = new Expression(nodenized[4], nodenized[5], nodenized[6]);
+        var secondExpression = new Expression(nodenized[2], nodenized[3], firstExpression);
         Assert.IsType<Expression>(expr);
         Assert.Equivalent(nodenized[0], expr.Left);
         Assert.Equivalent(nodenized[1], expr.Operator);
@@ -359,5 +359,26 @@ public class ParserTests
         var seventhExpression = new Expression(sixthExpression, nodenized[17], fourthExpression);
         Assert.IsType<Expression>(expr);
         Assert.Equivalent(seventhExpression, expr);
+    }
+
+    [Fact]
+    public void Decimal_Work_Now()
+    {
+        var parser = new Parser("1.5+2.3");
+
+        var expectedlist = new List<string> { "1.5", "+", "2.3" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(nodenized[0], expr.Left);
+        Assert.Equivalent(nodenized[1], expr.Operator);
+        Assert.Equivalent(nodenized[2], expr.Right);
     }
 }

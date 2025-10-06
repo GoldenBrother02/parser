@@ -28,7 +28,7 @@ public class Parser
             {
                 balance++;
                 // '(' cannot come after a number
-                if (prev != null && int.TryParse(prev, out _))
+                if (prev != null && decimal.TryParse(prev, out _))
                 {
                     throw new ArgumentException($"Invalid expression: number before '(' at position {i}");
                 }
@@ -68,7 +68,7 @@ public class Parser
         var check = tokens.Where(c => c != "(" && c != ")").ToList();
         bool isValid = check
             .Select((item, index) => new { item, index })
-            .All(x => x.index % 2 == 0 ? int.TryParse(x.item, out _) : Operators.Contains(x.item));
+            .All(x => x.index % 2 == 0 ? decimal.TryParse(x.item, out _) : Operators.Contains(x.item));
 
         if (!isValid)
         {
@@ -81,9 +81,9 @@ public class Parser
         List<ASTnode> result = [];
         foreach (var token in content)
         {
-            if (int.TryParse(token, out _))
+            if (decimal.TryParse(token, out _))
             {
-                result.Add(new Number(int.Parse(token)));
+                result.Add(new Number(decimal.Parse(token)));
             }
             else if (Operators.Contains(token))
             {
@@ -140,23 +140,26 @@ public class Parser
 
     public List<ASTnode> Power(List<ASTnode> flat)
     {
-        List<ASTnode> Checkedlist = [];
+        var checkedList = new List<ASTnode>();
 
-        for (int i = 0; i < flat.Count; i++)
+        // Start from right
+        for (int i = flat.Count - 1; i >= 0; i--)
         {
             if (flat[i] is BinaryOperator binary && binary.Type == "^")
             {
-                var left = Checkedlist.Last();
-                var right = flat[i + 1];
-                Checkedlist[Checkedlist.Count - 1] = new Expression(left, flat[i], right);
-                i++;
+                // Right operand from checkedList[0]
+                var right = checkedList[0];
+                var left = flat[i - 1];
+                checkedList[0] = new Expression(left, flat[i], right);
+                i--; // Skip the left operand we just consumed
             }
             else
             {
-                Checkedlist.Add(flat[i]);
+                checkedList.Insert(0, flat[i]);
             }
         }
-        return Checkedlist;
+
+        return checkedList;
     }
 
     public List<ASTnode> Multiplication(List<ASTnode> power)

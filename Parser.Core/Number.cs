@@ -2,10 +2,10 @@ namespace Paarser;
 
 public class Number : ASTnode
 {
-    public int Value { get; set; }
+    public decimal Value { get; set; }
 
 
-    public Number(int value)
+    public Number(decimal value)
     {
         Value = value;
     }

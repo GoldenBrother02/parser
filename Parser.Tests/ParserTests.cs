@@ -167,4 +167,197 @@ public class ParserTests
         Assert.IsType<Expression>(expr);
         Assert.Equivalent(fifthExpression, expr);
     }
+
+    [Fact]
+    public void Parser_returns_Correct_Expression_With_Power()
+    {
+        var parser = new Parser("3^2");
+
+        var expectedlist = new List<string> { "3", "^", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(nodenized[0], expr.Left);
+        Assert.Equivalent(nodenized[1], expr.Operator);
+        Assert.Equivalent(nodenized[2], expr.Right);
+    }
+
+    [Fact]
+    public void Parser_returns_Correct_Expression_With_More_Power()
+    {
+        var parser = new Parser("1+3^2");
+
+        var expectedlist = new List<string> { "1", "+", "3", "^", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        var firstExpression = new Expression(nodenized[2], nodenized[3], nodenized[4]);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(nodenized[0], expr.Left);
+        Assert.Equivalent(nodenized[1], expr.Operator);
+        Assert.Equivalent(firstExpression, expr.Right);
+    }
+
+    [Fact]
+    public void Parser_returns_Correct_Expression_With_Even_More_Power()
+    {
+        var parser = new Parser("1+3^2^2");
+
+        var expectedlist = new List<string> { "1", "+", "3", "^", "2", "^", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+        Assert.IsType<BinaryOperator>(nodenized[5]);
+        Assert.IsType<Number>(nodenized[6]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        var firstExpression = new Expression(nodenized[2], nodenized[3], nodenized[4]);
+        var secondExpression = new Expression(firstExpression, nodenized[5], nodenized[6]);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(nodenized[0], expr.Left);
+        Assert.Equivalent(nodenized[1], expr.Operator);
+        Assert.Equivalent(secondExpression, expr.Right);
+    }
+
+    [Fact]
+    public void Parser_returns_Correct_Expression_With_Multiplicative_Power()
+    {
+        var parser = new Parser("7*3^2*8");
+
+        var expectedlist = new List<string> { "7", "*", "3", "^", "2", "*", "8" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+        Assert.IsType<BinaryOperator>(nodenized[5]);
+        Assert.IsType<Number>(nodenized[6]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        var firstExpression = new Expression(nodenized[2], nodenized[3], nodenized[4]);
+        var secondExpression = new Expression(nodenized[0], nodenized[1], firstExpression);
+        var thirdExpression = new Expression(secondExpression, nodenized[5], nodenized[6]);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(thirdExpression, expr);
+    }
+
+    [Fact]
+    public void Parser_returns_Correct_Expression_With_Multiplication()
+    {
+        var parser = new Parser("1+3*2");
+
+        var expectedlist = new List<string> { "1", "+", "3", "*", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        var firstExpression = new Expression(nodenized[2], nodenized[3], nodenized[4]);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(nodenized[0], expr.Left);
+        Assert.Equivalent(nodenized[1], expr.Operator);
+        Assert.Equivalent(firstExpression, expr.Right);
+    }
+
+    [Fact]
+    public void Parser_returns_Correct_Expression_With_Multiplication_And_Power()
+    {
+        var parser = new Parser("1+3*2^2");
+
+        var expectedlist = new List<string> { "1", "+", "3", "*", "2", "^", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+        Assert.IsType<BinaryOperator>(nodenized[5]);
+        Assert.IsType<Number>(nodenized[6]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        var firstExpression = new Expression(nodenized[4], nodenized[5], nodenized[6]);
+        var secondExpression = new Expression(nodenized[2], nodenized[3], firstExpression);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(nodenized[0], expr.Left);
+        Assert.Equivalent(nodenized[1], expr.Operator);
+        Assert.Equivalent(secondExpression, expr.Right);
+    }
+
+    [Fact]
+    public void Ultimate_Test()
+    {
+        var parser = new Parser("1 +(2*   (3+4))+(7  ^8)+2 ^3");
+
+        var expectedlist = new List<string> { "1", "+", "(", "2", "*", "(", "3", "+", "4", ")", ")", "+", "(", "7", "^", "8", ")", "+", "2", "^", "3" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<OpenBracket>(nodenized[2]);
+        Assert.IsType<Number>(nodenized[3]);
+        Assert.IsType<BinaryOperator>(nodenized[4]);
+        Assert.IsType<OpenBracket>(nodenized[5]);
+        Assert.IsType<Number>(nodenized[6]);
+        Assert.IsType<BinaryOperator>(nodenized[7]);
+        Assert.IsType<Number>(nodenized[8]);
+        Assert.IsType<ClosedBracket>(nodenized[9]);
+        Assert.IsType<ClosedBracket>(nodenized[10]);
+        Assert.IsType<BinaryOperator>(nodenized[11]);
+        Assert.IsType<OpenBracket>(nodenized[12]);
+        Assert.IsType<Number>(nodenized[13]);
+        Assert.IsType<BinaryOperator>(nodenized[14]);
+        Assert.IsType<Number>(nodenized[15]);
+        Assert.IsType<ClosedBracket>(nodenized[16]);
+        Assert.IsType<BinaryOperator>(nodenized[17]);
+        Assert.IsType<Number>(nodenized[18]);
+        Assert.IsType<BinaryOperator>(nodenized[19]);
+        Assert.IsType<Number>(nodenized[20]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        var firstExpression = new Expression(nodenized[6], nodenized[7], nodenized[8]);
+        var secondExpression = new Expression(nodenized[3], nodenized[4], firstExpression);
+        var thirdExpression = new Expression(nodenized[13], nodenized[14], nodenized[15]);
+        var fourthExpression = new Expression(nodenized[18], nodenized[19], nodenized[20]);
+        var fifthExpression = new Expression(nodenized[0], nodenized[1], secondExpression);
+        var sixthExpression = new Expression(fifthExpression, nodenized[11], thirdExpression);
+        var seventhExpression = new Expression(sixthExpression, nodenized[17], fourthExpression);
+        Assert.IsType<Expression>(expr);
+        Assert.Equivalent(seventhExpression, expr);
+    }
 }

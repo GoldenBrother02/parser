@@ -74,6 +74,7 @@ public class Parser
             throw new ArgumentException("The expression you have entered is invalid.");
         }
     }
+
     public List<ASTnode> Nodenize(List<string> content)
     {
         List<ASTnode> result = [];
@@ -87,34 +88,82 @@ public class Parser
             {
                 result.Add(new BinaryOperator(token));
             }
+            else if (token == "(")
+            {
+                result.Add(new OpenBracket(token));
+            }
+            else if (token == ")")
+            {
+                result.Add(new ClosedBracket(token));
+            }
         }
         return result;
     }
 
-    public ASTnode TreeTime(List<ASTnode> list)
+    public List<ASTnode> BracketTime(List<ASTnode> list)
     {
-        List<ASTnode> newList = [];
-
-        if (list.Count == 1) { return list[0]; }
-
-        else
+        List<ASTnode> resultlist = [];
+        for (int pos = 0; pos < list.Count; pos++)
         {
-            for (int pos = 0; pos < list.Count; pos++)
+            if (list[pos] is OpenBracket)
             {
-                if (list[pos].GetType() == typeof(BinaryOperator))  //if operator
+                var balance = 1;
+                var start = pos;
+                while (balance != 0)
                 {
-                    newList.Add(new Expression(list[pos - 1], list[pos], list[pos + 1]));  // number operator number
-                    pos += 2; //go to next operator
-
-                    if (pos < list.Count)
+                    pos++;
+                    if (list[pos] is OpenBracket)
                     {
-                        newList.Add(list[pos]);  //next operator added to list
+                        balance++;
+                    }
+                    if (list[pos] is ClosedBracket)
+                    {
+                        balance--;
+                    }
+                    if (balance == 0)
+                    {
+                        int stop = pos;
+                        List<ASTnode> sublist = list.GetRange(start + 1, stop - start - 1);
+                        resultlist.Add(TreeTime(sublist));
+                        break;
                     }
                 }
             }
+            else
+            {
+                resultlist.Add(list[pos]);
+            }
+        }
+        return resultlist;
+    }
+
+    public ASTnode TreeTime(List<ASTnode> list)
+    {
+        var flat = BracketTime(list);
+
+        if (flat.Count == 0)
+            throw new ArgumentException("Empty expression.");
+        if (flat.Count == 1)
+            return flat[0];
+
+        // Sanity check: must alternate operand/operator/operand
+        if (flat.Count % 2 == 0)
+            throw new ArgumentException("Invalid number of tokens.");
+
+        ASTnode current = flat[0];
+
+        // Fold left-to-right
+        for (int i = 1; i < flat.Count; i += 2)
+        {
+            if (i + 1 >= flat.Count)
+                throw new ArgumentException("Dangling operator at end of expression.");
+
+            var op = (BinaryOperator)flat[i];
+            var right = flat[i + 1];
+            current = new Expression(current, op, right);
         }
 
-        if (newList.Count > 1) { return TreeTime(newList); }
-        else { return newList[0]; }
+        return current;
     }
+
 }

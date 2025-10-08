@@ -633,4 +633,81 @@ public class ParserTests
         var thirdExpression = new Expression(minusone, multiply, secondExpression);
         Assert.Equivalent(thirdExpression, expr);
     }
+
+    [Fact]
+    public void NumberBeforeOpenParen_Throws()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => new Parser("2("));
+        Assert.Contains("Invalid expression: number before '(' at position 1", ex.Message);
+    }
+
+    [Fact]
+    public void OpenParenFollowedByInvalidToken_Throws()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => new Parser("(+)"));
+        Assert.Contains("Invalid expression: '(' followed by invalid token '+'", ex.Message);
+    }
+
+    [Fact]
+    public void ClosingParenBeforeOpen_Throws()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => new Parser(")3+2"));
+        Assert.Contains("Invalid expression: ')' before matching '(' at position 0", ex.Message);
+    }
+
+    [Fact]
+    public void MismatchedParentheses_Throws()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => new Parser("(1+2"));
+        Assert.Contains("Mismatched parentheses in expression.", ex.Message);
+    }
+
+    [Fact]
+    public void OperatorBeforeClosingParen_Throws()
+    {
+        Parser parser = null!;
+
+        var ex = Assert.Throws<ArgumentException>(() => parser = new Parser("(3 + *)"));
+        Assert.Contains("operator before ')'", ex.Message);
+    }
+
+    [Fact]
+    public void InvalidExponent_Throws()
+    {
+        //Create a valid expression
+        var parser = new Parser("2 ^ 3");
+
+        //Convert
+        var nodes = parser.Nodenize(parser.Content);
+
+        //Replace the right-hand operand with a unary operator only
+        //    (simulates an incomplete exponent expression)
+        nodes[nodes.Count - 1] = new UnaryOperator("-");
+
+        //Right operand = UnaryOperator with no operand
+        var ex = Assert.Throws<ArgumentException>(() => parser.Power(nodes));
+
+        Assert.Contains("Invalid exponent: unary operator missing operand", ex.Message);
+    }
+
+    [Fact]
+    public void EmptyExpression_Throws()
+    {
+        var parser = new Parser("0");
+        var nodes = new System.Collections.Generic.List<ASTnode>();
+        var ex = Assert.Throws<ArgumentException>(() => parser.TreeTime(nodes));
+        Assert.Contains("Empty expression.", ex.Message);
+    }
+
+    [Fact]
+    public void InvalidNumberOfTokens_Throws()
+    {
+        var parser = new Parser("1 + 2");
+        var nodes = parser.Nodenize(parser.Content);
+
+        nodes.Add(new Number(5));
+
+        var ex = Assert.Throws<ArgumentException>(() => parser.TreeTime(nodes));
+        Assert.Contains("Invalid number of tokens.", ex.Message);
+    }
 }

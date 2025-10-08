@@ -279,9 +279,6 @@ public class Parser
         // Fold left-to-right
         for (int i = 1; i < DoneList.Count; i += 2)
         {
-            if (i + 1 >= DoneList.Count)
-                throw new ArgumentException("Dangling operator at end of expression.");
-
             var op = (BinaryOperator)DoneList[i];
             var right = DoneList[i + 1];
             current = new Expression(current, op, right);

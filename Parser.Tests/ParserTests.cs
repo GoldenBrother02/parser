@@ -381,4 +381,256 @@ public class ParserTests
         Assert.Equivalent(nodenized[1], expr.Operator);
         Assert.Equivalent(nodenized[2], expr.Right);
     }
+
+    [Fact]
+    public void Minus_Works_Properly()
+    {
+        var parser = new Parser("(1+2)-3");
+        var expectedTokens = new List<string> { "(", "1", "+", "2", ")", "-", "3" };
+        Assert.Equal(expectedTokens, parser.Content);
+        var nodenize = parser.Nodenize(parser.Content);
+        Assert.IsType<OpenBracket>(nodenize[0]);
+        Assert.IsType<Number>(nodenize[1]);
+        Assert.IsType<BinaryOperator>(nodenize[2]);
+        Assert.IsType<Number>(nodenize[3]);
+        Assert.IsType<ClosedBracket>(nodenize[4]);
+        Assert.IsType<BinaryOperator>(nodenize[5]);
+        Assert.IsType<Number>(nodenize[6]);
+    }
+
+    [Fact]
+    public void UnaryOperator_Nodenizes_V1()
+    {
+        var parser = new Parser("-1+2");
+
+        var expectedlist = new List<string> { "-", "1", "+", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<UnaryOperator>(nodenized[0]);
+        Assert.IsType<Number>(nodenized[1]);
+        Assert.IsType<BinaryOperator>(nodenized[2]);
+        Assert.IsType<Number>(nodenized[3]);
+    }
+
+    [Fact]
+    public void UnaryOperator_Nodenizes_V2()
+    {
+        var parser = new Parser("1+-2");
+
+        var expectedlist = new List<string> { "1", "+", "-", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<UnaryOperator>(nodenized[2]);
+        Assert.IsType<Number>(nodenized[3]);
+    }
+
+    [Fact]
+    public void UnaryOperator_Nodenizes_V3()
+    {
+        var parser = new Parser("1--2");
+
+        var expectedlist = new List<string> { "1", "-", "-", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<UnaryOperator>(nodenized[2]);
+        Assert.IsType<Number>(nodenized[3]);
+    }
+
+    [Fact]
+    public void UnaryOperator_Nodenizes_V4()
+    {
+        var parser = new Parser("1^-2");
+
+        var expectedlist = new List<string> { "1", "^", "-", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<UnaryOperator>(nodenized[2]);
+        Assert.IsType<Number>(nodenized[3]);
+    }
+
+    [Fact]
+    public void UnaryOperator_Nodenizes_V5()
+    {
+        var parser = new Parser("-(1+2)");
+
+        var expectedlist = new List<string> { "-", "(", "1", "+", "2", ")" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<UnaryOperator>(nodenized[0]);
+        Assert.IsType<OpenBracket>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+        Assert.IsType<ClosedBracket>(nodenized[5]);
+    }
+
+    [Fact]
+    public void UnaryOperator_Nodenizes_V6()
+    {
+        var parser = new Parser("1*-2");
+
+        var expectedlist = new List<string> { "1", "*", "-", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<UnaryOperator>(nodenized[2]);
+        Assert.IsType<Number>(nodenized[3]);
+    }
+
+    [Fact]
+    public void UnaryOperator_Parsing_V1()
+    {
+        var parser = new Parser("-(1+2)");
+
+        var expectedlist = new List<string> { "-", "(", "1", "+", "2", ")" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<UnaryOperator>(nodenized[0]);
+        Assert.IsType<OpenBracket>(nodenized[1]);
+        Assert.IsType<Number>(nodenized[2]);
+        Assert.IsType<BinaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+        Assert.IsType<ClosedBracket>(nodenized[5]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        Assert.IsType<Expression>(expr);
+        ASTnode minusone = new Number(-1);
+        ASTnode multiply = new BinaryOperator("*");
+        var firstExpression = new Expression(nodenized[2], nodenized[3], nodenized[4]);
+        var secondExpression = new Expression(minusone, multiply, firstExpression);
+        Assert.Equivalent(secondExpression, expr);
+    }
+
+    [Fact]
+    public void UnaryOperator_Parsing_V2()
+    {
+        var parser = new Parser("2^-(1+2)");
+
+        var expectedlist = new List<string> { "2", "^", "-", "(", "1", "+", "2", ")" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<Number>(nodenized[0]);
+        Assert.IsType<BinaryOperator>(nodenized[1]);
+        Assert.IsType<UnaryOperator>(nodenized[2]);
+        Assert.IsType<OpenBracket>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+        Assert.IsType<BinaryOperator>(nodenized[5]);
+        Assert.IsType<Number>(nodenized[6]);
+        Assert.IsType<ClosedBracket>(nodenized[7]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        Assert.IsType<Expression>(expr);
+        ASTnode minusone = new Number(-1);
+        ASTnode multiply = new BinaryOperator("*");
+        var firstExpression = new Expression(nodenized[4], nodenized[5], nodenized[6]);
+        var secondExpression = new Expression(minusone, multiply, firstExpression);
+        var thirdExpression = new Expression(nodenized[0], nodenized[1], secondExpression);
+        Assert.Equivalent(thirdExpression, expr);
+    }
+
+    [Fact]
+    public void UnaryOperator_Parsing_V3()
+    {
+        var parser = new Parser("-2^2");
+
+        var expectedlist = new List<string> { "-", "2", "^", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<UnaryOperator>(nodenized[0]);
+        Assert.IsType<Number>(nodenized[1]);
+        Assert.IsType<BinaryOperator>(nodenized[2]);
+        Assert.IsType<Number>(nodenized[3]);
+
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        Assert.IsType<Expression>(expr);
+        ASTnode minusone = new Number(-1);
+        ASTnode multiply = new BinaryOperator("*");
+        var firstExpression = new Expression(nodenized[1], nodenized[2], nodenized[3]);
+        var secondExpression = new Expression(minusone, multiply, firstExpression);
+        Assert.Equivalent(secondExpression, expr);
+    }
+
+    [Fact]
+    public void UnaryOperator_Parsing_V4()
+    {
+        var parser = new Parser("-2^-2");
+
+        var expectedlist = new List<string> { "-", "2", "^", "-", "2" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<UnaryOperator>(nodenized[0]);
+        Assert.IsType<Number>(nodenized[1]);
+        Assert.IsType<BinaryOperator>(nodenized[2]);
+        Assert.IsType<UnaryOperator>(nodenized[3]);
+        Assert.IsType<Number>(nodenized[4]);
+
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        Assert.IsType<Expression>(expr);
+        ASTnode minusone = new Number(-1);
+        ASTnode multiply = new BinaryOperator("*");
+        var innerunary = new Expression(minusone, multiply, nodenized[4]);
+        var firstExpression = new Expression(nodenized[1], nodenized[2], innerunary);
+        var secondExpression = new Expression(minusone, multiply, firstExpression);
+        Assert.Equivalent(secondExpression, expr);
+    }
+
+    [Fact]
+    public void UnaryOperator_Parsing_V5()
+    {
+        var parser = new Parser("-2^-(1+2)");
+
+        var expectedlist = new List<string> { "-", "2", "^", "-", "(", "1", "+", "2", ")" };
+        Assert.Equal(parser.Content, expectedlist);
+
+        var nodenized = parser.Nodenize(parser.Content);
+        Assert.IsType<List<ASTnode>>(nodenized);
+        Assert.IsType<UnaryOperator>(nodenized[0]);
+        Assert.IsType<Number>(nodenized[1]);
+        Assert.IsType<BinaryOperator>(nodenized[2]);
+        Assert.IsType<UnaryOperator>(nodenized[3]);
+        Assert.IsType<OpenBracket>(nodenized[4]);
+        Assert.IsType<Number>(nodenized[5]);
+        Assert.IsType<BinaryOperator>(nodenized[6]);
+        Assert.IsType<Number>(nodenized[7]);
+        Assert.IsType<ClosedBracket>(nodenized[8]);
+
+        var expr = (Expression)parser.TreeTime(nodenized);
+        Assert.IsType<Expression>(expr);
+        ASTnode minusone = new Number(-1);
+        ASTnode multiply = new BinaryOperator("*");
+        var firstExpression = new Expression(nodenized[5], nodenized[6], nodenized[7]);
+        var innerunary = new Expression(minusone, multiply, firstExpression);
+        var secondExpression = new Expression(nodenized[1], nodenized[2], innerunary);
+        var thirdExpression = new Expression(minusone, multiply, secondExpression);
+        Assert.Equivalent(thirdExpression, expr);
+    }
 }

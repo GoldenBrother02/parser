@@ -31,46 +31,48 @@ public class Parser
         return expr;
     }
 
-    // term = power ("*" || "/") power, X amount of times
+    // term = unary (("*" || "/") unary), X amount of times
+    //now unary in stead of power
     private Expression ParseTerm()
     {
-        Expression expr = ParsePower();
+        Expression expr = ParseUnary();
         while (Current.Type == TokenType.Multiply || Current.Type == TokenType.Divide)
         {
             Token op = Current;
             pos++;
-            Expression right = ParsePower();
+            Expression right = ParseUnary();
             expr = new BinaryExpr(expr, op, right);
         }
         return expr;
     }
 
-    // power = unary, with optionally another ("^" power)
-    private Expression ParsePower()
-    {
-        Expression left = ParseUnary();
-        if (Current.Type == TokenType.Power)
-        {
-            Token op = Current;
-            pos++;
-            Expression right = ParsePower(); // right-associative
-            return new BinaryExpr(left, op, right);
-        }
-        return left;
-    }
-
-    // unary = primary || ( "-" unary )
-    // potentially multple "-" *mark*
+    // unary = ("+" || "-") unary || power
+    // unary before power
     private Expression ParseUnary()
     {
-        if (Current.Type == TokenType.Minus)
+        if (Current.Type == TokenType.Plus || Current.Type == TokenType.Minus)  //also allowed positve unary
         {
             Token op = Current;
             pos++;
             Expression right = ParseUnary();
             return new UnaryExpr(op, right);
         }
-        return ParsePrimary();
+        return ParsePower();
+    }
+
+    // power = primary ("^" unary) with potentially more powers
+    // now primary in stead of unary cus order swap
+    private Expression ParsePower()
+    {
+        Expression left = ParsePrimary();
+        if (Current.Type == TokenType.Power)
+        {
+            Token op = Current;
+            pos++;
+            Expression right = ParseUnary();
+            return new BinaryExpr(left, op, right);
+        }
+        return left;
     }
 
     // primary = NUMBER || (  "(" expression ")"  )

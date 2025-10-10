@@ -39,36 +39,34 @@ public class ParserTests
 
         Expression ast = parser.Parse();
 
-        // Root = "^"
-        Assert.IsType<BinaryExpr>(ast);
-        var root = (BinaryExpr)ast;
-        Assert.Equal(TokenType.Power, root.Op.Type);
+        // Root = Unary(-, Power)
+        Assert.IsType<UnaryExpr>(ast);
+        var outerUnary = (UnaryExpr)ast;
+        Assert.Equal(TokenType.Minus, outerUnary.Op.Type);
 
-        // Left = Unary(-, 2)
-        Assert.IsType<UnaryExpr>(root.Left);
-        var leftUnary = (UnaryExpr)root.Left;
-        Assert.Equal(TokenType.Minus, leftUnary.Op.Type);
-        Assert.IsType<NumberExpr>(leftUnary.Right);
-        Assert.Equal(2, ((NumberExpr)leftUnary.Right).Value);
+        // Inner = PowerExpr ("^")
+        Assert.IsType<BinaryExpr>(outerUnary.Right);
+        var power = (BinaryExpr)outerUnary.Right;
+        Assert.Equal(TokenType.Power, power.Op.Type);
+
+        // Left = 2
+        Assert.IsType<NumberExpr>(power.Left);
+        Assert.Equal(2, ((NumberExpr)power.Left).Value);
 
         // Right = Unary(-, Unary(-, (1+2)))
-        Assert.IsType<UnaryExpr>(root.Right);
-        var rightUnary1 = (UnaryExpr)root.Right;
+        Assert.IsType<UnaryExpr>(power.Right);
+        var rightUnary1 = (UnaryExpr)power.Right;
         Assert.Equal(TokenType.Minus, rightUnary1.Op.Type);
 
         Assert.IsType<UnaryExpr>(rightUnary1.Right);
         var rightUnary2 = (UnaryExpr)rightUnary1.Right;
         Assert.Equal(TokenType.Minus, rightUnary2.Op.Type);
 
-        // Inner expression = (1+2)
         Assert.IsType<BinaryExpr>(rightUnary2.Right);
         var innerAdd = (BinaryExpr)rightUnary2.Right;
         Assert.Equal(TokenType.Plus, innerAdd.Op.Type);
 
-        Assert.IsType<NumberExpr>(innerAdd.Left);
         Assert.Equal(1, ((NumberExpr)innerAdd.Left).Value);
-
-        Assert.IsType<NumberExpr>(innerAdd.Right);
         Assert.Equal(2, ((NumberExpr)innerAdd.Right).Value);
     }
 
@@ -116,24 +114,24 @@ public class ParserTests
 
         Expression ast = parser.Parse();
 
-        // Root = BinaryExpr "^"
-        Assert.IsType<BinaryExpr>(ast);
-        var power = (BinaryExpr)ast;
-        Assert.Equal(TokenType.Power, power.Op.Type);
-
-        // Left = UnaryExpr '--2'
-        // UnaryExpr('-', UnaryExpr('-', NumberExpr(2)))
-        Assert.IsType<UnaryExpr>(power.Left);
-        var outerUnary = (UnaryExpr)power.Left;
+        // Root = Unary(-)
+        Assert.IsType<UnaryExpr>(ast);
+        var outerUnary = (UnaryExpr)ast;
         Assert.Equal(TokenType.Minus, outerUnary.Op.Type);
 
+        // Next = Unary(-)
         Assert.IsType<UnaryExpr>(outerUnary.Right);
         var innerUnary = (UnaryExpr)outerUnary.Right;
         Assert.Equal(TokenType.Minus, innerUnary.Op.Type);
 
-        // InnerUnary = 2
-        Assert.IsType<NumberExpr>(innerUnary.Right);
-        Assert.Equal(2, ((NumberExpr)innerUnary.Right).Value);
+        // Then = PowerExpr ("^")
+        Assert.IsType<BinaryExpr>(innerUnary.Right);
+        var power = (BinaryExpr)innerUnary.Right;
+        Assert.Equal(TokenType.Power, power.Op.Type);
+
+        // Left = 2
+        Assert.IsType<NumberExpr>(power.Left);
+        Assert.Equal(2, ((NumberExpr)power.Left).Value);
 
         // Right = 3
         Assert.IsType<NumberExpr>(power.Right);
@@ -144,14 +142,13 @@ public class ParserTests
     public void Parser_ParsePrimary_Throws_OnUnexpectedToken()
     {
         var tokens = new List<Token>
-            {
-                new Token(TokenType.Plus, "+"), // Primary cannot start with "+"
-                new Token(TokenType.END, "")
-            };
+    {
+        new Token(TokenType.END, "") // now it's END that causes failure
+    };
         var parser = new Parser(tokens);
 
         var ex = Assert.Throws<Exception>(() => parser.Parse());
-        Assert.Equal("Unexpected token: Plus", ex.Message);
+        Assert.Contains("Unexpected token", ex.Message);
     }
 
     [Fact]
